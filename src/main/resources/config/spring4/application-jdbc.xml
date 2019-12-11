@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.3.xsd 
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+		<!-- 数据库连接 -->
+	<!--本地-->
+	<bean id="local" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"></property>
+		<property name="url" value="jdbc:oracle:thin:@192.168.1.105:1521/orcl"></property>
+		<property name="username" value="scott"></property>
+		<property name="password" value="123"></property>
+	</bean>
+
+	 <bean id ="dataSource" class= "AIETickets.Util.DynamicDataSource" >
+          <property name ="targetDataSources">  
+                <map key-type ="java.lang.String">
+                      <entry value-ref ="local" key= "local"></entry >
+                </map>
+          </property>
+          <property name ="defaultTargetDataSource" ref= "local"></property >      <!-- 默认使用local的数据源 -->
+     </bean >
+
+  <bean id="dataSourceAspect" class="AIETickets.Util.DataSourceAspect" />
+
+<!--  配置AOP增强 可用@Before（目标方法前织入增强方法）等注释-->
+	<aop:config>
+	  	<aop:aspect ref="dataSourceAspect">
+	  	<aop:pointcut expression="execution(* AIETickets..*.*(..))" id="dataSourcePointcut"/>
+	  	<aop:before pointcut-ref="dataSourcePointcut" method="intercept"/>
+	  	</aop:aspect>
+  	</aop:config>
+
+	<!-- 提交事务 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations" value="classpath:/config/mybatis3/*Mapper.xml" />
+		<property name="typeAliasesPackage" value="AIETickets" />
+	</bean>
+
+<!--	可用 @Autowired的方法直接注入接口和service实例-->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="AIETickets" />
+	</bean>
+
+<!--	事务管理器-->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+</beans>
+

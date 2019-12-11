@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="AIETickets.dao.TreeDao">
+
+<resultMap type="Tree" id="Tree">
+	<id column="ID" property="Id"/>
+	<result column="NAME" property="name"/>
+	<result column="PID" property="pId"/>
+	<result column="URL" property="url"/>
+	<result column="GRADE" property="grade"/>
+</resultMap>
+
+	<!--查看一级节点-->
+	<select id="list" resultMap="Tree">
+		select * from AI_TREE a
+		<where>
+		a.GRADE = 1
+		</where>
+	</select>
+
+	<!--查询下级节点-->
+	<select id="sonList" resultMap="Tree">
+		select * from AI_TREE t
+		<where>
+			t.PID = #{id}
+		</where>
+	</select>
+
+	<!--查询相关权限的下级节点-->
+	<select id="sonRoleList" resultMap="Tree">
+		select * from AI_TREE t
+		<where>
+			t.PID = #{id} 
+			AND
+			#{role} >= t.RANK
+		</where>
+	</select>
+
+	<!--根据权限查询一级节点-->
+	<select id="listRole" resultMap="Tree">
+		select * from AI_TREE t
+		<where>
+		t.GRADE = 1 
+		AND
+		#{role} >= t.RANK
+		</where>
+	</select>
+
+</mapper>
